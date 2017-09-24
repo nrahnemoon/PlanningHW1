@@ -9,9 +9,9 @@
 #include <stdlib.h>
 
 /* Input Arguments */
-#define	MAP_IN      prhs[0]
+#define	MAP_IN		prhs[0]
 #define	ROBOT_IN	prhs[1]
-#define	GOAL_IN     prhs[2]
+#define	GOAL_IN		prhs[2]
 
 
 /* Output Arguments */
@@ -50,18 +50,17 @@ bool applyaction(double *map, int x_size, int y_size, float robotposeX, float ro
         *newy = robotposeY + mprim[dir][prim][i][1];
         *newtheta = mprim[dir][prim][i][2];
         
-        int gridposx = (int)(*newx / RES);
-        int gridposy = (int)(*newy / RES);
+        int gridposx = (int)(*newx / RES + 0.5);
+        int gridposy = (int)(*newy / RES + 0.5);
 
         /* check validity */
-        if ((int)map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
-            return false;
-        }
         if (gridposx <= 1 || gridposx >= x_size || gridposy <= 1 || gridposy >= y_size){
             return false;
         }
+        if ((int)map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
+            return false;
+        }
     }
-
 
     return true;
 }
@@ -73,7 +72,7 @@ int getPrimitiveDirectionforRobotPose(float angle)
     if (angle < 0.0) {
         angle += 2 * M_PI;
     }
-    int dir = (int)(angle / (2 * M_PI / NUMOFDIRS));
+    int dir = (int)(angle / (2 * M_PI / NUMOFDIRS) + 0.5);
     if (dir == 8) {
         dir = 0;
     }
@@ -87,8 +86,8 @@ static void planner(
            float robotposeX,
             float robotposeY,
             float robotposeTheta,
-            int goalposeX,
-            int goalposeY,
+            float goalposeX,
+            float goalposeY,
             PrimArray mprim,
             int *prim_id)
 {   
@@ -201,8 +200,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 "goalpose vector should be 1 by 3.");         
     }
     double* goalposeV = mxGetPr(GOAL_IN);
-    int goalposeX = (int)goalposeV[0];
-    int goalposeY = (int)goalposeV[1];
+    float goalposeX = (float)goalposeV[0];
+    float goalposeY = (float)goalposeV[1];
         
     /* Create a matrix for the return action */ 
     ACTION_OUT = mxCreateNumericMatrix( 1, 1, mxINT8_CLASS, mxREAL); 
