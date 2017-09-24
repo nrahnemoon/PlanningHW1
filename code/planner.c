@@ -69,6 +69,7 @@ int getPrimitiveDirectionforRobotPose(float angle)
 {
     /* returns the direction index with respect to the PrimArray */
     /* normalize bw 0 to 2pi */
+    angle = angle % (2 * M_PI);
     if (angle < 0.0) {
         angle += 2 * M_PI;
     }
