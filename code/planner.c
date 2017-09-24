@@ -54,7 +54,7 @@ bool applyaction(double *map, int x_size, int y_size, float robotposeX, float ro
         int gridposy = (int)(*newy / RES + 0.5);
 
         /* check validity */
-        if (gridposx <= 1 || gridposx >= x_size || gridposy <= 1 || gridposy >= y_size){
+        if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
             return false;
         }
         if ((int)map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
