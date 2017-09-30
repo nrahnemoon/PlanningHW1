@@ -4,44 +4,16 @@
  *
  *=================================================================*/
 #include <math.h>
-#include "mex.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "planner.h"
+#include "Node.h"
+#include <queue>          // std::priority_queue
+using namesapce std;
 
-/* Input Arguments */
-#define	MAP_IN		prhs[0]
-#define	ROBOT_IN	prhs[1]
-#define	GOAL_IN		prhs[2]
+int roundNumber = 0;
 
-
-/* Output Arguments */
-#define	ACTION_OUT	plhs[0]
-
-/*access to the map is shifted to account for 0-based indexing in the map, whereas
-1-based indexing in matlab (so, robotpose and goalpose are 1-indexed)*/
-#define GETMAPINDEX(X, Y, XSIZE, YSIZE) ((Y-1)*XSIZE + (X-1))
-
-#if !defined(MAX)
-#define	MAX(A, B)	((A) > (B) ? (A) : (B))
-#endif
-
-#if !defined(MIN)
-#define	MIN(A, B)	((A) < (B) ? (A) : (B))
-#endif
-
-/* Primitives Information */
-#define NUMOFDIRS 8
-#define NUMOFPRIMS 5
-#define NUMOFINTERSTATES 10
-#define NUMOFDIM 3
-
-#define RES 0.1
-
-typedef float PrimArray[NUMOFDIRS][NUMOFPRIMS][NUMOFINTERSTATES][NUMOFDIM];
-
-int temp = 0;
-
-bool applyaction(double *map, int x_size, int y_size, float robotposeX, float robotposeY, float robotposeTheta,
+bool applyaction(int *map, int x_size, int y_size, float robotposeX, float robotposeY, float robotposeTheta,
                  float *newx, float *newy, float *newtheta, PrimArray mprim, int dir, int prim)
 {
     int i;
@@ -57,6 +29,7 @@ bool applyaction(double *map, int x_size, int y_size, float robotposeX, float ro
         if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
             return false;
         }
+
         if ((int)map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
             return false;
         }
@@ -81,28 +54,40 @@ int getPrimitiveDirectionforRobotPose(float angle)
 }
 
 static void planner(
-		   double*	map,
-		   int x_size,
- 		   int y_size,
-           float robotposeX,
-            float robotposeY,
-            float robotposeTheta,
-            float goalposeX,
-            float goalposeY,
-            PrimArray mprim,
-            int *prim_id)
-{   
-    printf("temp=%d\n", temp);
-    temp = temp+1;
+    bool* map,
+    int x_size,
+    int y_size,
+    float robotposeX,
+    float robotposeY,
+    float robotposeTheta,
+    float goalposeX,
+    float goalposeY,
+    PrimArray mprim,
+    int *prim_id)
+{
+    printf("Round Number = %d\n", roundNumber);
+    roundNumber = roundNumber + 1;
+    
+    WorldInfo worldInfo = WorldInfo(robotposeX, robotposeY, goalposeX, goalposeY,
+            (x_size * RES), (y_size * RES), * map, mprim);
+    Node startNode = Node(robotposeX, robotposeX, robotposeTheta, worldInfo, NULL);
 
-    *prim_id = 0; /* arbitrary action */
+    priority_queue<Node*> priorityQueue;
+    priorityQueue.insert(&startNode);
+
+    startNode.discoverNeighbors();
+    
+        for (int i = 0; i < startNode.getNumNeighbors(); i++) {
+            Node* neighbor = startNode.getNeighbor(i);
+            priorityQueue.insert(neighbor);
+        }
     
     /*printf("robot: %d %d; ", robotposeX, robotposeY);*/
     /*printf("goal: %d %d;", goalposeX, goalposeY);*/
     
 	/*for now greedily move towards the target, */
 	/*but this is where you can put your planner */
-	double mindisttotarget = 1000000;
+	/*double mindisttotarget = 1000000;
     int dir;
     int prim;
 	dir = getPrimitiveDirectionforRobotPose(robotposeTheta);
@@ -110,9 +95,9 @@ static void planner(
     for (prim = 0; prim < NUMOFPRIMS; prim++) {
         float newx, newy, newtheta;
         bool ret;
-        ret = applyaction(map, x_size, y_size, robotposeX, robotposeY, robotposeTheta, &newx, &newy, &newtheta, mprim, dir, prim);
+        ret = applyaction(map, x_size, y_size, robotposeX, robotposeY, robotposeTheta, &newx, &newy, &newtheta, mprim, dir, prim); */
             /* skip action that leads to collision */
-        if (ret) {
+        /* if (ret) {
             double disttotarget = (double)sqrt(((newx-goalposeX)*(newx-goalposeX) + (newy-goalposeY)*(newy-goalposeY)));
             if(disttotarget < mindisttotarget){
                 mindisttotarget = disttotarget;
@@ -123,7 +108,7 @@ static void planner(
 
     }
     printf("action %d\n", *prim_id);
-    return;
+    return; */
 }
 
 /*prhs contains input parameters (3): 
