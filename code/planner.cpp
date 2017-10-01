@@ -8,8 +8,10 @@
 #include <stdlib.h>
 #include "planner.h"
 #include "Node.h"
+#include "WorldInfo.h"
 #include <queue>          // std::priority_queue
-using namesapce std;
+
+using namespace std;
 
 int roundNumber = 0;
 
@@ -42,7 +44,7 @@ int getPrimitiveDirectionforRobotPose(float angle)
 {
     /* returns the direction index with respect to the PrimArray */
     /* normalize bw 0 to 2pi */
-    angle = angle % (2 * M_PI);
+    angle = fmod(angle, (2 * M_PI));
     if (angle < 0.0) {
         angle += 2 * M_PI;
     }
@@ -69,19 +71,42 @@ static void planner(
     roundNumber = roundNumber + 1;
     
     WorldInfo worldInfo = WorldInfo(robotposeX, robotposeY, goalposeX, goalposeY,
-            (x_size * RES), (y_size * RES), * map, mprim);
-    Node startNode = Node(robotposeX, robotposeX, robotposeTheta, worldInfo, NULL);
+            (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
+    Node startNode = Node(robotposeX, robotposeX, robotposeTheta, -1, &worldInfo, NULL);
 
     priority_queue<Node*> priorityQueue;
-    priorityQueue.insert(&startNode);
+    priorityQueue.push(&startNode);
 
-    startNode.discoverNeighbors();
-    
-        for (int i = 0; i < startNode.getNumNeighbors(); i++) {
-            Node* neighbor = startNode.getNeighbor(i);
-            priorityQueue.insert(neighbor);
+    Node* currNode;
+
+    while (true) {
+
+        currNode = priorityQueue.top();
+        priorityQueue.pop();
+        
+        if (currNode->isGoal())
+            break;
+
+        currNode->discoverNeighbors();
+
+        for (int i = 0; i < currNode->getNumNeighbors(); i++) {
+            Node* neighbor = currNode->getNeighbor(i);
+            priorityQueue.push(neighbor);
         }
+
+        currNode->close();
+    }
     
+    // currNode is the goal at this point
+    while(currNode->getParent()->getParent() != NULL) {
+        currNode = currNode->getParent();
+    }
+    // currNode is the node immediately after the start node at this point
+    *prim_id = currNode->getIncomingPrimitive();
+
+    printf("action %d\n", *prim_id);
+    return;
+
     /*printf("robot: %d %d; ", robotposeX, robotposeY);*/
     /*printf("goal: %d %d;", goalposeX, goalposeY);*/
     
@@ -164,7 +189,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
     /* get the dimensions of the map and the map matrix itself*/     
     int x_size = mxGetM(MAP_IN);
     int y_size = mxGetN(MAP_IN);
-    double* map = mxGetPr(MAP_IN);
+    bool* map = ((bool*)((int*)mxGetPr(MAP_IN)));
     
     /* get the dimensions of the robotpose and the robotpose itself*/     
     int robotpose_M = mxGetM(ROBOT_IN);

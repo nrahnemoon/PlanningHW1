@@ -1,72 +1,79 @@
 #include "Node.h"
 #include <math.h>
 
-class Node {
+Node::Node(float x, float y, float orientation, int incomingPrimitive, WorldInfo* worldInfo, Node* parent)
+    :mX(x), mY(y), mOrientation(orientation), mIncomingPrimitive(incomingPrimitive), mWorldInfo(worldInfo), mParent(parent), mClosed(false) {
+    mG = mParent->getG() + getDistanceToParent();
+    // Using Dijkstra heuristic
+    mH = mWorldInfo->getDijkstraCostAt(mX, mY);
+    // Uncomment for Euclidean heuristic
+    // mH = getDistanceToGoal();
+}
 
-    private:
+float Node::getDistanceToParent() {
+    float deltaX = fabs(mParent->getX() - mX);
+    float deltaY = fabs(mParent->getY() - mY);
+    return mWorldInfo->euclideanDistance(deltaX, deltaY);
+}
 
-    float euclideanDistance(float deltaX, float deltaY) {
-        return sqrt(pow(deltaX, 2) + pow(deltaY, 2));
-    }
+float Node::getDistanceToGoal() {
+    float deltaX = fabs(mWorldInfo->getGoalX() - mX);
+    float deltaY = fabs(mWorldInfo->getGoalY() - mY);
+    return mWorldInfo->euclideanDistance(deltaX, deltaY);
+}
 
-    float getDistanceToParent() {
-        float deltaX = abs(mParent->getX() - mX);
-        float deltaY = abs(mParent->getY() - mY);
-        return euclideanDistance(deltaX, deltaY);
-    }
+bool Node::operator<(Node thatNode) const {
+    return this->getCost() > thatNode.getCost();
+}
 
-    float getDistanceToGoal() {
-        float deltaX = abs(mWorldInfo->getGoalX() - mX);
-        float deltaY = abs(mWorldInfo->getGoalY() - mY);
-        return euclideanDistance(deltaX, deltaY);
-    }
+void Node::discoverNeighbors() {
 
-    bool operator<(Node thatNode) const {
-        return getCost() > thatNode.getCost();
-    }
+    for (int primitiveNum = 0; primitiveNum < NUMOFPRIMS; primitiveNum++) {
 
-    public:
+        float newX = mX + mWorldInfo->getPrimitive(mOrientation, primitiveNum, 0);
+        float newY = mY + mWorldInfo->getPrimitive(mOrientation, primitiveNum, 1);
+        float newOrientation = mWorldInfo->getPrimitive(mOrientation, primitiveNum, 2);
 
-    Node(float x, float y, float orientation, WorldInfo* worldInfo, Node* parent)
-        :mX(x), mY(y), mOrientaiton(orientation), mWorldInfo(worldInfo), mParent(parent), mClosed(false) {
-        mG = mParent->getG() + getDistanceToParent();
-        mH = getDistanceToGoal();
-    }
-
-    void discoverNeighbors() {
-
-        for (int i = 0; i < NUMOFPRIMS; i++) {
-
-            float newX = mX + mPrimitives[mOrientation][i][NUMOFINTERSTATES - 1][0];
-            float newY = mY + mPrimitives[mOrientation][i][NUMOFINTERSTATES - 1][1];
-            float newOrientation = mPrimitives[mOrientation][i][NUMOFINTERSTATES - 1][2];
-            
-            if(!mWorldInfo->isInCollision(newX, newY)) {
-                if (nodeExists(newX, newY)) {
-                    Node* testNode = mWorldInfo->getNode(newX, newY);
-                    if (!testNode->isClosed()) {
-                        mNeighbors.insert(testNode);
-                        continue;
-                    }
+        if(!mWorldInfo->isInCollision(newX, newY)) {
+            if (mWorldInfo->nodeExists(newX, newY, newOrientation)) {
+                Node* testNode = mWorldInfo->getNode(newX, newY, newOrientation);
+                if (testNode && !testNode->isClosed()) {
+                    mNeighbors.push_back(testNode);
+                    continue;
                 }
-                Node newNode = Node(newX, newY, newOrientation, mWorldInfo, this);
-                mNeighbors.insert(&newNode);
             }
+            Node newNode = Node(newX, newY, newOrientation, primitiveNum, mWorldInfo, this);
+            mNeighbors.push_back(&newNode);
         }
     }
+}
 
-    float getX() { return mX; }
-    float getY() { return mY; }
-    float getOrientation() { return mOrientation; }
-    float getG() { return mG; }
-    bool isClosed() { return mClosed; }
-    float getCost() { return (mG + mH); }
+float Node::getX() { return mX; }
 
-    Node* getNeighbor(int index) {
-        return mNeighbors[index];
-    }
+float Node::getY() { return mY; }
 
-    int getNumNeighbors() {
-        return mNeighbors.size();
-    }
+float Node::getOrientation() { return mOrientation; }
+
+float Node::getG() { return mG; }
+
+bool Node::isClosed() { return mClosed; }
+
+float Node::getCost() const { return (mG + mH); }
+
+void Node::close() { mClosed = true; }
+
+bool Node::isGoal() { return (mX == mWorldInfo->getGoalX() && mY == mWorldInfo->getGoalY()); }
+
+Node* Node::getNeighbor(int index) { return mNeighbors[index]; }
+
+int Node::getNumNeighbors() { return mNeighbors.size(); }
+
+Node* Node::getParent() { return mParent; }
+
+int Node::getID() {
+    return (mWorldInfo->getMapIndex(mX, mY) * NUMOFDIRS) + mOrientation;
+}
+
+int Node::getIncomingPrimitive() {
+    return mIncomingPrimitive;
 }

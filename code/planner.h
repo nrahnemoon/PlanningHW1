@@ -1,3 +1,6 @@
+#ifndef PLANNER_H
+#define PLANNER_H
+
 #include "mex.h"
 
 /* Input Arguments */
@@ -30,7 +33,6 @@
 #define RES 0.1
 
 typedef float PrimArray[NUMOFDIRS][NUMOFPRIMS][NUMOFINTERSTATES][NUMOFDIM];
+typedef float (*PrimArrayPtr)[NUMOFPRIMS][NUMOFINTERSTATES][NUMOFDIM];
 
-enum bool {
-    false, true
-};
+#endif
