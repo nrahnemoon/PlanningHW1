@@ -2,12 +2,17 @@
 #include <math.h>
 
 Node::Node(float x, float y, float orientation, int incomingPrimitive, WorldInfo* worldInfo, Node* parent)
-    :mX(x), mY(y), mOrientation(orientation), mIncomingPrimitive(incomingPrimitive), mWorldInfo(worldInfo), mParent(parent), mClosed(false) {
-    mG = mParent->getG() + getDistanceToParent();
+    :mX(x), mY(y), mOrientation(orientation), mIncomingPrimitive(incomingPrimitive), mWorldInfo(worldInfo), mParent(parent), mClosed(false), mNumNeighbors(0) {
+    if (mParent == NULL) {
+        mG = 0;
+    } else {
+        mG = mParent->getG() + getDistanceToParent();
+    }
     // Using Dijkstra heuristic
-    mH = mWorldInfo->getDijkstraCostAt(mX, mY);
+    // mH = mWorldInfo->getDijkstraCostAt(mX, mY);
     // Uncomment for Euclidean heuristic
-    // mH = getDistanceToGoal();
+    mH = getDistanceToGoal();
+    mWorldInfo->addToNodeGrid(this);
 }
 
 float Node::getDistanceToParent() {
@@ -29,21 +34,22 @@ bool Node::operator<(Node thatNode) const {
 void Node::discoverNeighbors() {
 
     for (int primitiveNum = 0; primitiveNum < NUMOFPRIMS; primitiveNum++) {
-
         float newX = mX + mWorldInfo->getPrimitive(mOrientation, primitiveNum, 0);
         float newY = mY + mWorldInfo->getPrimitive(mOrientation, primitiveNum, 1);
         float newOrientation = mWorldInfo->getPrimitive(mOrientation, primitiveNum, 2);
 
-        if(!mWorldInfo->isInCollision(newX, newY)) {
+        if(!mWorldInfo->isInCollision(newX, newY) && !mWorldInfo->outOfBounds(newX, newY)) {
             if (mWorldInfo->nodeExists(newX, newY, newOrientation)) {
                 Node* testNode = mWorldInfo->getNode(newX, newY, newOrientation);
                 if (testNode && !testNode->isClosed()) {
-                    mNeighbors.push_back(testNode);
-                    continue;
+                    mNeighbors[mNumNeighbors] = testNode;
+                    mNumNeighbors++;
                 }
+                continue;
             }
-            Node newNode = Node(newX, newY, newOrientation, primitiveNum, mWorldInfo, this);
-            mNeighbors.push_back(&newNode);
+            mNeighbors[mNumNeighbors] = new Node(newX, newY, newOrientation, primitiveNum, mWorldInfo, this);
+            // mexPrintf("newNode contains = %f, %f, %f", mNeighbors[mNumNeighbors]->getX(), mNeighbors[mNumNeighbors]->getY(), mNeighbors[mNumNeighbors]->getOrientation());
+            mNumNeighbors++;
         }
     }
 }
@@ -66,7 +72,7 @@ bool Node::isGoal() { return (mX == mWorldInfo->getGoalX() && mY == mWorldInfo->
 
 Node* Node::getNeighbor(int index) { return mNeighbors[index]; }
 
-int Node::getNumNeighbors() { return mNeighbors.size(); }
+int Node::getNumNeighbors() { return mNumNeighbors; }
 
 Node* Node::getParent() { return mParent; }
 

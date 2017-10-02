@@ -12,7 +12,8 @@ class Node {
 
     private:
 
-        vector<Node*> mNeighbors;
+        Node* mNeighbors[NUMOFPRIMS];
+        int mNumNeighbors;
         bool mClosed;
         float mX, mY, mOrientation;
         float mG, mH;

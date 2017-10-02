@@ -43,6 +43,7 @@ class WorldInfo {
         float getMapHeight();
         float getPrimitive(int orientation, int primitiveNum, int selector);
         
+        void addToNodeGrid(Node* node);
         int discretize(float pos);
         bool isInCollision(float x, float y);
         bool nodeExists(float x, float y, float orientation);
@@ -52,6 +53,7 @@ class WorldInfo {
         int getDijkstraCostAt(float x, float y);
         float euclideanDistance(float deltaX, float deltaY);
         float getDistanceToGoal(float x, float y);
+        bool outOfBounds(float x, float y);
 };
 
 #endif

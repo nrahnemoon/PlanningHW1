@@ -67,36 +67,35 @@ static void planner(
     PrimArray mprim,
     int *prim_id)
 {
-    printf("Round Number = %d\n", roundNumber);
     roundNumber = roundNumber + 1;
-    
     WorldInfo worldInfo = WorldInfo(robotposeX, robotposeY, goalposeX, goalposeY,
             (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
-    Node startNode = Node(robotposeX, robotposeX, robotposeTheta, -1, &worldInfo, NULL);
-
+    Node* startNode = new Node(robotposeX, robotposeY, robotposeTheta, -1, &worldInfo, NULL);
     priority_queue<Node*> priorityQueue;
-    priorityQueue.push(&startNode);
-
+    priorityQueue.push(startNode);
     Node* currNode;
 
     while (true) {
-
+        if (priorityQueue.size() == 0) {
+            *prim_id = -1;
+            mexPrintf("The goal is not reachable!!!");
+            return;
+        }
         currNode = priorityQueue.top();
         priorityQueue.pop();
-        
+        if (currNode->isClosed())
+            continue;
         if (currNode->isGoal())
             break;
-
         currNode->discoverNeighbors();
 
         for (int i = 0; i < currNode->getNumNeighbors(); i++) {
             Node* neighbor = currNode->getNeighbor(i);
+            mexPrintf("neighbor location = (%f, %f, %f)\n", neighbor->getX(), neighbor->getY(), neighbor->getOrientation());
             priorityQueue.push(neighbor);
         }
-
         currNode->close();
     }
-    
     // currNode is the goal at this point
     while(currNode->getParent()->getParent() != NULL) {
         currNode = currNode->getParent();
@@ -104,7 +103,6 @@ static void planner(
     // currNode is the node immediately after the start node at this point
     *prim_id = currNode->getIncomingPrimitive();
 
-    printf("action %d\n", *prim_id);
     return;
 
     /*printf("robot: %d %d; ", robotposeX, robotposeY);*/
@@ -166,6 +164,7 @@ void parseMotionPrimitives(PrimArray mprim)
 
         }
     }
+    fclose(fp);
 }
 
 void mexFunction( int nlhs, mxArray *plhs[], 
@@ -184,8 +183,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
     } else if (nlhs != 1) {
 	    mexErrMsgIdAndTxt( "MATLAB:planner:maxlhs",
                 "One output argument required."); 
-    } 
-        
+    }
+
     /* get the dimensions of the map and the map matrix itself*/     
     int x_size = mxGetM(MAP_IN);
     int y_size = mxGetN(MAP_IN);

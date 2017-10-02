@@ -2,13 +2,13 @@
 #include <math.h>
 #include <queue>
 #include <iostream>
+#include "mex.h"
 
 using namespace std;
 
 WorldInfo::WorldInfo(float startX, float startY, float endX, float endY, float mapWidth, float mapHeight, bool* map, PrimArrayPtr primitives)
     :mStartX(startX), mStartY(startY), mEndX(endX), mEndY(endY), mMapWidth(mapWidth), mMapHeight(mapHeight), mMap(map), mPrimitives(primitives) {
-	cout << "Here!" << endl;
-    computeDijkstraCost();
+    //computeDijkstraCost();
 }
 
 float WorldInfo::getStartX() { return mStartX; }
@@ -24,6 +24,7 @@ float WorldInfo::getMapWidth() { return mMapWidth; }
 float WorldInfo::getMapHeight()  { return mMapHeight; }
 
 float WorldInfo::getPrimitive(int orientation, int primitiveNum, int selector) {
+    // mexPrintf("orientation, primitiveNum, selector, primitive = %d, %d, %d, %f\n", orientation, primitiveNum, selector, mPrimitives[orientation][primitiveNum][NUMOFINTERSTATES - 1][selector]);
     return mPrimitives[orientation][primitiveNum][NUMOFINTERSTATES - 1][selector];
 }
 
@@ -32,7 +33,8 @@ int WorldInfo::discretize(float pos) {
 }
 
 bool WorldInfo::isInCollision(float x, float y) {
-    int mapIndex = GETMAPINDEX(discretize(x), discretize(y), discretize(mMapWidth), discretize(mMapWidth));
+    // mexPrintf("discretize(x, y, mMapWidth, mMapHeight) = (%d, %d, %d, %d)\n", discretize(x), discretize(y), discretize(mMapWidth), discretize(mMapHeight));
+    int mapIndex = GETMAPINDEX(discretize(x), discretize(y), discretize(mMapWidth), discretize(mMapHeight));
     return ((bool) mMap[mapIndex]);
 }
 
@@ -58,7 +60,6 @@ int WorldInfo::getID(float x, float y, float orientation) {
 }
 
 void WorldInfo::computeDijkstraCost() {
-    cout << "Here1" << endl;
     queue<int> dijkstraQueue;
     int goalPos = getMapIndex(mEndX, mEndY);
     dijkstraQueue.push(goalPos);
@@ -90,9 +91,8 @@ void WorldInfo::computeDijkstraCost() {
                 }
             }
         }
-        cout << "Dijkstra cost size = " << mDijkstraCost.size() << endl;
     }
-    
+
     int currX = discretize(mEndX);
     int currY = discretize(mEndY);
     int mapXMax = discretize(mMapWidth);
@@ -115,4 +115,13 @@ float WorldInfo::getDistanceToGoal(float x, float y) {
 
 float WorldInfo::euclideanDistance(float deltaX, float deltaY) {
     return sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+}
+
+bool WorldInfo::outOfBounds(float x, float y) {
+    return (x > mMapWidth || x < 0 || y > mMapHeight || y < 0);
+}
+
+void WorldInfo::addToNodeGrid(Node* node) {
+    int nodeID = getID(node->getX(), node->getY(), node->getOrientation());
+    mNodeGrid[nodeID] = node;
 }
