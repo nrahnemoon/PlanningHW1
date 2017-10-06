@@ -29,7 +29,7 @@ class WorldInfo {
         int mDiscreteMapHeight;
         int mDiscreteMapSize;
         PrimArrayPtr mPrimitives;
-        int* mObstacleMap;
+        double* mObstacleMap;
         int mCloseThreshold;
         
         // This takes into account orientation, so max size is
@@ -46,7 +46,7 @@ class WorldInfo {
 
     public:
 
-        WorldInfo(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, const PrimArrayPtr primitives);
+        WorldInfo(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, double* obstacleMap, const PrimArrayPtr primitives);
         ~WorldInfo();
 
         float getStartX();
@@ -79,7 +79,7 @@ class WorldInfo {
         int getDiscreteStartOrientation();
         void computeDijkstraHeuristics();
         int getDumbEuclideanToEnd(int discreteX, int discreteY);
-        void update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, PrimArrayPtr primitives);
+        void update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, double* obstacleMap, PrimArrayPtr primitives);
         int getCloseThreshold();
         void resetCloseThreshold();
         bool isCloseEnoughToGoal(float x, float y);

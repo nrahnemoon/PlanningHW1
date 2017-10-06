@@ -122,7 +122,7 @@ static void doAStar() {
 }
 
 static void planner(
-    int* map,
+    double* map,
     int x_size,
     int y_size,
     float robotposeX,
@@ -240,7 +240,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
     /* get the dimensions of the map and the map matrix itself*/     
     int x_size = mxGetM(MAP_IN);
     int y_size = mxGetN(MAP_IN);
-    int* map = (int*)mxGetPr(MAP_IN);
+    double* map = mxGetPr(MAP_IN);
     
     /* get the dimensions of the robotpose and the robotpose itself*/     
     int robotpose_M = mxGetM(ROBOT_IN);

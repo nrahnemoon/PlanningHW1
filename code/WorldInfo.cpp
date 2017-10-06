@@ -6,7 +6,7 @@
 
 using namespace std;
 
-WorldInfo::WorldInfo(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, PrimArrayPtr primitives)
+WorldInfo::WorldInfo(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, double* obstacleMap, PrimArrayPtr primitives)
     :mStartX(startX), mStartY(startY), mStartOrientation(startOrientation), mEndX(endX), mEndY(endY), mMapWidth(mapWidth), mMapHeight(mapHeight), mObstacleMap(obstacleMap), mPrimitives(primitives) {
 
     mDiscreteStartX = discretize(mStartX);
@@ -96,7 +96,7 @@ int WorldInfo::discretizeAngle(float angle) {
 
 bool WorldInfo::isInCollision(int discreteX, int discreteY) {
     int mapIndex = GETMAPINDEX(discreteX, discreteY, mDiscreteMapWidth, mDiscreteMapHeight);
-    return (mObstacleMap[mapIndex] != 0);
+    return (((int) mObstacleMap[mapIndex]) != 0.0);
 }
 
 bool WorldInfo::nodeExists(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive) {
@@ -240,7 +240,7 @@ void WorldInfo::addToNodeGrid(Node* node) {
     mNodeGrid[nodeID] = node;
 }
 
-void WorldInfo::update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, PrimArrayPtr primitives) {
+void WorldInfo::update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, double* obstacleMap, PrimArrayPtr primitives) {
     mStartX = startX;
     mStartY = startY;
     mStartOrientation = startOrientation;
