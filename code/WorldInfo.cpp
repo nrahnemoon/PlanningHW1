@@ -18,9 +18,10 @@ WorldInfo::WorldInfo(float startX, float startY, float startOrientation, float e
     mDiscreteMapHeight = discretize(mMapHeight);
     mDiscreteMapSize = mDiscreteMapWidth * mDiscreteMapHeight;
     mCloseThreshold = 0;
+    mexPrintf("Discrete map size = (%d, %d)", mDiscreteMapWidth, mDiscreteMapHeight);
 
-    for (int x = 0; x < mDiscreteMapWidth; x++) {
-        for (int y = 0; y < mDiscreteMapHeight; y++) {
+    for (int y = 0; y < mDiscreteMapHeight; y++) {
+        for (int x = 0; x < mDiscreteMapWidth; x++) {
             if (isInCollision(x,y))
                 mexPrintf("X");
             else
@@ -58,6 +59,10 @@ int WorldInfo::getDiscreteStartX() { return mDiscreteStartX; }
 
 int WorldInfo::getDiscreteStartY() { return mDiscreteStartY; }
 
+int WorldInfo::getDiscreteMapWidth() { return mDiscreteMapWidth; }
+
+int WorldInfo::getDiscreteMapHeight() { return mDiscreteMapHeight; }
+
 int WorldInfo::getDiscreteStartOrientation() { return discretizeAngle(mStartOrientation); }
 
 float WorldInfo::getMapWidth() { return mMapWidth; }
@@ -90,7 +95,7 @@ int WorldInfo::discretizeAngle(float angle) {
 }
 
 bool WorldInfo::isInCollision(int discreteX, int discreteY) {
-    int mapIndex = GETMAPINDEX((discreteX+1), (discreteY+1), mDiscreteMapWidth, mDiscreteMapHeight);
+    int mapIndex = GETMAPINDEX(discreteX, discreteY, mDiscreteMapWidth, mDiscreteMapHeight);
     return (mObstacleMap[mapIndex] != 0);
 }
 

@@ -132,7 +132,8 @@ static void planner(
     float goalposeY,
     PrimArray mprim,
     int *prim_id)
-{   
+{
+    mexPrintf("Map size = (%d, %d)", x_size, y_size);
     if (worldInfo == NULL) {
         mexPrintf("Creating worldinfo!\n");
         worldInfo = new WorldInfo(robotposeX, robotposeY, robotposeTheta, goalposeX, goalposeY,
@@ -172,14 +173,12 @@ static void planner(
     mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
     mexPrintf("Curr Node's Primitive = %d\n", currNode->getIncomingPrimitive());
     mexPrintf("Curr Node Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX(), currNode->getDiscreteY()));
-    mexPrintf("Curr Node(1,0) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()+1, currNode->getDiscreteY()));
-    mexPrintf("Curr Node(1,1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()+1, currNode->getDiscreteY()+1));
-    mexPrintf("Curr Node(0,1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX(), currNode->getDiscreteY()+1));
-    mexPrintf("Curr Node(-1,0) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()-1, currNode->getDiscreteY()));
-    mexPrintf("Curr Node(-1,-1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()-1, currNode->getDiscreteY()-1));
-    mexPrintf("Curr Node(0,-1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX(), currNode->getDiscreteY()-1));
-    mexPrintf("Curr Node(1,-1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()+1, currNode->getDiscreteY()-1));
-    mexPrintf("Curr Node(-1,1) Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX()-1, currNode->getDiscreteY()+1));
+    mexPrintf("Here's what the docs say: %d\n", ((int) map[GETMAPINDEX(currNode->getDiscreteX(), currNode->getDiscreteY(), worldInfo->getDiscreteMapWidth(), worldInfo->getDiscreteMapHeight())]));
+    for (int x = -20; x <= 20; x++) {
+        for (int y = -20; y <= 20; y++) {
+            mexPrintf("Curr Node(%d,%d) Is In Colllision = %d\n", x, y, worldInfo->isInCollision(currNode->getDiscreteX()+x, currNode->getDiscreteY()+y));
+        }
+    }
     *prim_id = currNode->getIncomingPrimitive();
 
     currNode->setParent(NULL); // currNode is now the start node

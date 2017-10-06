@@ -74,6 +74,8 @@ class WorldInfo {
         int getDiscreteGoalY();
         int getDiscreteStartX();
         int getDiscreteStartY();
+        int getDiscreteMapWidth();
+        int getDiscreteMapHeight();
         int getDiscreteStartOrientation();
         void computeDijkstraHeuristics();
         int getDumbEuclideanToEnd(int discreteX, int discreteY);
