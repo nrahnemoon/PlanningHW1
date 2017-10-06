@@ -4,6 +4,8 @@
 #include "Node.h"
 #include "planner.h"
 #include <map>
+#include <ctime>
+
 using namespace std;
 
 class Node;
@@ -14,46 +16,72 @@ class WorldInfo {
 
         float mStartX;
         float mStartY;
+        float mStartOrientation;
         float mEndX;
         float mEndY;
+        int mDiscreteStartX;
+        int mDiscreteStartY;
+        int mDiscreteEndX;
+        int mDiscreteEndY;
         float mMapWidth;
         float mMapHeight;
+        int mDiscreteMapWidth;
+        int mDiscreteMapHeight;
+        int mDiscreteMapSize;
         PrimArrayPtr mPrimitives;
-        bool* mMap;
+        int* mObstacleMap;
+        int mCloseThreshold;
         
         // This takes into account orientation, so max size is
-        // mMapHeight * mMapWidth * NUMOFDIRS
+        // mMapHeight * mMapWidth * NUMOFDIRS * NUMOFPRIMS
         map<int, Node*> mNodeGrid;
         
         // This only takes into account position, so max size is
         // mMapHeight * mMapWidth
-        map<int, int> mDijkstraCost;
-        
-        void computeDijkstraCost();
+        map<int, int> mHeuristics;
+
+        void computeDumbEuclideanHeuristics();
+        int getDumbEuclideanToStart(int discreteX, int discreteY); // Euclidean without square-root
+        bool isStart(int discreteX, int discreteY);
 
     public:
 
-        WorldInfo(float startX, float startY, float endX, float endY, float mapWidth, float mapHeight, bool* map, const PrimArrayPtr primitives);
+        WorldInfo(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, const PrimArrayPtr primitives);
+        ~WorldInfo();
 
         float getStartX();
         float getStartY();
+        float getStartOrientation();
         float getGoalX();
         float getGoalY();
         float getMapWidth();
         float getMapHeight();
-        float getPrimitive(int orientation, int primitiveNum, int selector);
+        float getPrimitive(int discreteOrientation, int primitiveNum, int selector);
         
         void addToNodeGrid(Node* node);
         int discretize(float pos);
-        bool isInCollision(float x, float y);
-        bool nodeExists(float x, float y, float orientation);
-        Node* getNode(float x, float y, float orientation);
-        int getMapIndex(float x, float y);
-        int getID(float x, float y, float orientation);
-        int getDijkstraCostAt(float x, float y);
+        int discretizeAngle(float angle);
+        bool isInCollision(int discreteX, int discreteY);
+        bool nodeExists(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive);
+        Node* getNode(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive);
+        int getMapIndex(int discreteX, int discreteY);
+        int getID(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive);
+        int getHeuristicAt(int discreteX, int discreteY);
         float euclideanDistance(float deltaX, float deltaY);
         float getDistanceToGoal(float x, float y);
-        bool outOfBounds(float x, float y);
+        bool outOfBounds(int discreteX, int discreteY);
+        int getDiscreteGoalX();
+        int getDiscreteGoalY();
+        int getDiscreteStartX();
+        int getDiscreteStartY();
+        int getDiscreteStartOrientation();
+        void computeDijkstraHeuristics();
+        int getDumbEuclideanToEnd(int discreteX, int discreteY);
+        void update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, int* obstacleMap, PrimArrayPtr primitives);
+        int getCloseThreshold();
+        void resetCloseThreshold();
+        bool isCloseEnoughToGoal(float x, float y);
+        bool goalReached();
 };
 
 #endif

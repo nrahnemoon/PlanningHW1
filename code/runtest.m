@@ -1,4 +1,4 @@
-function[numofmoves, caught] = runtest(mapfile, robotstart, targetstart)
+function[] = tests(mapfile, robotstart, targetstart)
 
 envmap = load(mapfile);
 
