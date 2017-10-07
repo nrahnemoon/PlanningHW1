@@ -229,7 +229,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		  int nrhs, const mxArray*prhs[] )
      
 {
-    mexPrintf("In mex function!");
+    mexPrintf("In mex function!\n");
     /* Read motion primtives */
     PrimArray motion_primitives;
     parseMotionPrimitives(motion_primitives);
