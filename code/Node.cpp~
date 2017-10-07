@@ -22,7 +22,8 @@ bool Node::getNeighborsDiscovered() {
 float Node::getDistanceToParent() {
     int deltaX = mParent->getDiscreteX() - mDiscreteX;
     int deltaY = mParent->getDiscreteY() - mDiscreteY;
-    return pow(deltaX, 2) + pow(deltaY, 2);
+    return pow(discreteX - mDiscreteStartX, 2) + pow(discreteY - mDiscreteStartY, 2)
+    return mWorldInfo->euclideanDistance(((float) deltaX), ((float) deltaY));
 }
 
 float Node::getDistanceToGoal() {
@@ -81,8 +82,8 @@ void Node::updateG() {
     if (mParent == NULL) {
         mG = 0;
     } else {
-        mG = mParent->getG() + (50/getDistanceToParent());
-        // 50/getDistanceToParent() biases towards longer steps -> less moves
+        mG = mParent->getG() + getDistanceToParent() + 10;
+        // + 10 to bias to fewer moves instead of shorter distance
     }
 }
 
@@ -109,7 +110,7 @@ bool Node::isClosed() {
 float Node::getCost() {
     updateG();
     updateH();
-    return (mG + 0.1 * mH);
+    return (mG + mH);
 }
 
 void Node::close() { mCloseID = mWorldInfo->getCloseThreshold() + 1; }

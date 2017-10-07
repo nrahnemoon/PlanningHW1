@@ -22,6 +22,7 @@ WorldInfo* worldInfo = NULL;
 Node* goalNodeWithBestPath = NULL;
 bool aStarRunning = false;
 long currCloseID = 1;
+long mapMemoryLocation = -1;
 
 bool applyaction(int *map, int x_size, int y_size, float robotposeX, float robotposeY, float robotposeTheta,
                  float *newx, float *newy, float *newtheta, PrimArray mprim, int dir, int prim)
@@ -159,14 +160,19 @@ static void planner(
     Node* currNode = goalNodeWithBestPath;
     
     int i = 0;
-    mexPrintf("Goal = (%d, %d)\n", worldInfo->getDiscreteGoalX(), worldInfo->getDiscreteGoalY());
+    //mexPrintf("Goal = (%d, %d)\n", worldInfo->getDiscreteGoalX(), worldInfo->getDiscreteGoalY());
     // currNode is the goal at this point
     while(currNode->getParent()->getParent() != NULL) {
-        mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
+        //mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
         currNode = currNode->getParent();
         i++;
     }
-    mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());    
+    if (currNode->getParent()->getDiscreteX() != worldInfo->getDiscreteStartX() ||
+            currNode->getParent()->getDiscreteY() != worldInfo->getDiscreteStartY()) {
+        goalNodeWithBestPath = NULL;
+        return;
+    }
+    /*mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());    
     mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", (i+1), currNode->getParent()->getDiscreteX(), currNode->getParent()->getDiscreteY(), currNode->getParent()->getDiscreteOrientation(), currNode->getParent()->getIncomingPrimitive());
     mexPrintf("Start = (%d, %d, %d)\n", worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation());
 
@@ -178,7 +184,7 @@ static void planner(
         for (int y = -20; y <= 20; y++) {
             mexPrintf("Curr Node(%d,%d) Is In Colllision = %d\n", x, y, worldInfo->isInCollision(currNode->getDiscreteX()+x, currNode->getDiscreteY()+y));
         }
-    }
+    }*/
     *prim_id = currNode->getIncomingPrimitive();
 
     currNode->setParent(NULL); // currNode is now the start node
@@ -223,7 +229,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		  int nrhs, const mxArray*prhs[] )
      
 {
-
+    mexPrintf("In mex function!");
     /* Read motion primtives */
     PrimArray motion_primitives;
     parseMotionPrimitives(motion_primitives);
@@ -237,11 +243,23 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 "One output argument required."); 
     }
 
-    /* get the dimensions of the map and the map matrix itself*/     
+    /* get the dimensions of the map and the map matrix itself*/  
+    mexPrintf("About to load the map\n");   
     int x_size = mxGetM(MAP_IN);
     int y_size = mxGetN(MAP_IN);
     double* map = mxGetPr(MAP_IN);
-    
+    mexPrintf("loaded the map\n");
+    //mexPrintf("map memory location = %lu\n", map);
+    if (mapMemoryLocation != -1 && mapMemoryLocation != ((long) map)) {
+        delete worldInfo;
+        delete goalNodeWithBestPath;
+        mexPrintf("Current map is different from previous -- reloading map!\n");
+    } else {
+        mexPrintf("Current map is new or the same as the previous -- reusing map!\n");
+    }
+
+    mapMemoryLocation = ((long) map);
+
     /* get the dimensions of the robotpose and the robotpose itself*/     
     int robotpose_M = mxGetM(ROBOT_IN);
     int robotpose_N = mxGetN(ROBOT_IN);

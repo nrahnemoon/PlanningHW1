@@ -41,7 +41,6 @@ class WorldInfo {
         map<int, int> mHeuristics;
 
         void computeDumbEuclideanHeuristics();
-        int getDumbEuclideanToStart(int discreteX, int discreteY); // Euclidean without square-root
         bool isStart(int discreteX, int discreteY);
 
     public:
@@ -79,6 +78,7 @@ class WorldInfo {
         int getDiscreteStartOrientation();
         void computeDijkstraHeuristics();
         int getDumbEuclideanToEnd(int discreteX, int discreteY);
+        int getDumbEuclideanToStart(int discreteX, int discreteY); // Euclidean without square-root
         void update(float startX, float startY, float startOrientation, float endX, float endY, float mapWidth, float mapHeight, double* obstacleMap, PrimArrayPtr primitives);
         int getCloseThreshold();
         void resetCloseThreshold();

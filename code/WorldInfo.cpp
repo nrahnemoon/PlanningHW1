@@ -18,7 +18,7 @@ WorldInfo::WorldInfo(float startX, float startY, float startOrientation, float e
     mDiscreteMapHeight = discretize(mMapHeight);
     mDiscreteMapSize = mDiscreteMapWidth * mDiscreteMapHeight;
     mCloseThreshold = 0;
-    mexPrintf("Discrete map size = (%d, %d)", mDiscreteMapWidth, mDiscreteMapHeight);
+    /*mexPrintf("Discrete map size = (%d, %d)\n", mDiscreteMapWidth, mDiscreteMapHeight);
 
     for (int y = 0; y < mDiscreteMapHeight; y++) {
         for (int x = 0; x < mDiscreteMapWidth; x++) {
@@ -28,7 +28,7 @@ WorldInfo::WorldInfo(float startX, float startY, float startOrientation, float e
                 mexPrintf(" ");
         }
         mexPrintf("\n");
-    }
+    }*/
     
     //computeDumbEuclideanHeuristics();
     //computeDijkstraHeuristics();
@@ -96,6 +96,7 @@ int WorldInfo::discretizeAngle(float angle) {
 
 bool WorldInfo::isInCollision(int discreteX, int discreteY) {
     int mapIndex = GETMAPINDEX(discreteX, discreteY, mDiscreteMapWidth, mDiscreteMapHeight);
+    mexPrintf("Checking if (%d, %d) with mapIndex %d is in collision\n", discreteX, discreteY, mapIndex);
     return (((int) mObstacleMap[mapIndex]) != 0.0);
 }
 
@@ -273,7 +274,8 @@ void WorldInfo::resetCloseThreshold() {
 
 bool WorldInfo::isCloseEnoughToGoal(float x, float y) {
     // Bug in Matlab code says the target has been reached when the robot is 0.5 away from the goal
-    return (euclideanDistance(fabs(x- mEndX), fabs(y - mEndY)) <= 0.5);
+    // Let this be 0.4 for safety...
+    return (euclideanDistance(fabs(x- mEndX), fabs(y - mEndY)) <= 0.4);
 }
 
 bool WorldInfo::goalReached() {

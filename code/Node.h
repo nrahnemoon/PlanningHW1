@@ -19,7 +19,7 @@ class Node {
         int mCloseID;
         float mX, mY, mOrientation;
         int mDiscreteX, mDiscreteY, mDiscreteOrientation;
-        float mG, mH;
+        float mF, mG, mH;
         WorldInfo* mWorldInfo;
         Node* mParent;
         int mIncomingPrimitive; // Set to -1 for the start node
@@ -42,6 +42,7 @@ class Node {
         int getDiscreteX();
         int getDiscreteY();
         int getDiscreteOrientation();
+        float getF();
         float getG();
         float getH();
         void close();
