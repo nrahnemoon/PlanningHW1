@@ -22,8 +22,8 @@ else
     normalized_angle = wrapTo2Pi(robotpos(3));
     dir = fix(normalized_angle / (2*pi / size(mprim, 1)) + 0.5) + 1;
     if (dir == 9)
-        dir = 1;
-    end
+      dir = 1;
+    end;
 	for idx = 1:size(mprim, 2)
            [ret, motion] = applyaction(envmap, res, robotpos, mprim, dir, idx);
            new_pos = motion(end,:);

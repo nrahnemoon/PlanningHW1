@@ -64,15 +64,10 @@ int getPrimitiveDirectionforRobotPose(float angle)
     return dir;
 }
 
-static void callComputeDijkstraHeuristics() {
-    mexPrintf("New Dijkstra Loop!\n");
-    worldInfo->computeDijkstraHeuristics();
-}
-
 static void doAStar() {
     aStarRunning = true;
     Node* startNode;
-    mexPrintf("New A Star Loop!\n");
+    // mexPrintf("New A Star Loop!\n");
     if (worldInfo->nodeExists(worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation(), -1)) {
         startNode = worldInfo->getNode(worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation(), -1);
     } else {
@@ -134,13 +129,13 @@ static void planner(
     PrimArray mprim,
     int *prim_id)
 {
-    mexPrintf("Map size = (%d, %d)", x_size, y_size);
+    // mexPrintf("Map size = (%d, %d)", x_size, y_size);
     if (worldInfo == NULL) {
-        mexPrintf("Creating worldinfo!\n");
+        // mexPrintf("Creating worldinfo!\n");
         worldInfo = new WorldInfo(robotposeX, robotposeY, robotposeTheta, goalposeX, goalposeY,
                 (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
     } else {
-        mexPrintf("Updating worldInfo!\n");
+        // mexPrintf("Updating worldInfo!\n");
         worldInfo->update(robotposeX, robotposeY, robotposeTheta, goalposeX, goalposeY,
                 (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
     }
@@ -150,7 +145,7 @@ static void planner(
         return;
     }
 
-    callComputeDijkstraHeuristics();
+    worldInfo->computeDijkstraHeuristics();
 
     if (!aStarRunning) {
         doAStar();

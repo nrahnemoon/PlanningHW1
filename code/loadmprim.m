@@ -31,7 +31,6 @@ for i = 1 : NUMOFDIRS
         end
     end
 end
-fclose(fileID);
 
 end
 

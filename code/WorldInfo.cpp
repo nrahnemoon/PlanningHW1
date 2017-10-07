@@ -96,7 +96,7 @@ int WorldInfo::discretizeAngle(float angle) {
 
 bool WorldInfo::isInCollision(int discreteX, int discreteY) {
     int mapIndex = GETMAPINDEX(discreteX, discreteY, mDiscreteMapWidth, mDiscreteMapHeight);
-    mexPrintf("Checking if (%d, %d) with mapIndex %d is in collision\n", discreteX, discreteY, mapIndex);
+    //mexPrintf("Checking if (%d, %d) with mapIndex %d is in collision\n", discreteX, discreteY, mapIndex);
     return (((int) mObstacleMap[mapIndex]) != 0.0);
 }
 
@@ -204,7 +204,7 @@ void WorldInfo::computeDijkstraHeuristics() {
                 if (!mObstacleMap[neighborMapIndex]) {
                     if (mHeuristics[neighborMapIndex] != mHeuristics[currMapIndex] + 1) {
                         mHeuristics[neighborMapIndex] = mHeuristics[currMapIndex] + 1;
-                        //mexPrintf("Dijkstra Heuristic for (%d, %d) = %d\n", neighborDiscreteX, neighborDiscreteY, mHeuristics[neighborMapIndex]);
+                        // mexPrintf("Dijkstra Heuristic for (%d, %d) = %d\n", neighborDiscreteX, neighborDiscreteY, mHeuristics[neighborMapIndex]);
                         dijkstraQueue.push(new DijkstraNode(neighborDiscreteX, neighborDiscreteY, getDumbEuclideanToStart(neighborDiscreteX, neighborDiscreteY)));
                     }
                 }
