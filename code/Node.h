@@ -58,6 +58,9 @@ class Node {
         void setIncomingPrimitive(int incomingPrimitive);
         bool isCloseEnoughToGoal();
         bool getNeighborsDiscovered();
+        void resetNeighborsDiscovered();
+        int getCloseID();
+        void resetCloseID();
 };
 
 class CompareNode {

@@ -15,6 +15,10 @@ Node::Node(float x, float y, float orientation, int incomingPrimitive, WorldInfo
     mCloseID = mWorldInfo->getCloseThreshold();
 }
 
+void Node::resetNeighborsDiscovered() {
+    mNeighborsDiscovered = false;
+}
+
 bool Node::getNeighborsDiscovered() {
     return mNeighborsDiscovered;
 }
@@ -31,7 +35,7 @@ float Node::getDistanceToGoal() {
 
 void Node::discoverNeighbors() {
     // mexPrintf("Neighbors for (%d, %d, %d)\n\n", mDiscreteX, mDiscreteY, mDiscreteOrientation);
-
+    mNumNeighbors = 0;
     for (int primitiveNum = 0; primitiveNum < NUMOFPRIMS; primitiveNum++) {
         float newX = mX + mWorldInfo->getPrimitive(mDiscreteOrientation, primitiveNum, 0);
         float newY = mY + mWorldInfo->getPrimitive(mDiscreteOrientation, primitiveNum, 1);
@@ -44,20 +48,44 @@ void Node::discoverNeighbors() {
 
         //mexPrintf("New Neighbor[%d] = (%d, %d, %d)\n", primitiveNum, discreteNewX, discreteNewY, discreteNewOrientation);
         //mexPrintf("New Neighbor 1\n");
-        if(!mWorldInfo->isInCollision(discreteNewX, discreteNewY) && !mWorldInfo->outOfBounds(discreteNewX, discreteNewY)) {
+        if(!mWorldInfo->outOfBounds(discreteNewX, discreteNewY) && !mWorldInfo->isPathInCollision(this, primitiveNum)) {
             //mexPrintf("New Neighbor 2\n");
             if (mWorldInfo->nodeExists(discreteNewX, discreteNewY, discreteNewOrientation, primitiveNum)) {
                 Node* testNode = mWorldInfo->getNode(discreteNewX, discreteNewY, discreteNewOrientation, primitiveNum);
-                //mexPrintf("testNode->isClosed() = %d\n", testNode->isClosed());
-                //mexPrintf("mWorldInfo->getClosingThreshold() = %d\n", mWorldInfo->getCloseThreshold());
-                if (testNode && !testNode->isClosed()) {
+                
+                if (testNode && testNode->getCloseID() == mWorldInfo->getCloseThreshold() - 1) {
+                    testNode->setParent(this);
+                    testNode->resetCloseID();
+                    testNode->getCost();
+                    testNode->resetNeighborsDiscovered();
+                    //mexPrintf("Old neighbor exists at %d, %d.  Setting this node to parent.\n", discreteNewX, discreteNewY);
                     mNeighbors[mNumNeighbors] = testNode;
                     mNumNeighbors++;
+                    continue;
+                }
+                if (testNode && !testNode->isClosed()) {
+                    Node* testNodeParent = testNode->getParent();
+                    float testNodeCost = testNode->getCost();
+                    testNode->setParent(this);
+                    if (testNode->getCost() >= testNodeCost) {
+                        testNode->setParent(testNodeParent);
+                        testNode->getCost();
+                        mNeighbors[mNumNeighbors] = testNode;
+                        mNumNeighbors++;
+                        //mexPrintf("Cheaper neighbor exists at %d, %d\n", discreteNewX, discreteNewY);
+                        continue;
+                    }
+                    mNeighbors[mNumNeighbors] = testNode;
+                    mNumNeighbors++;
+                    testNode->resetCloseID();
+                    testNode->resetNeighborsDiscovered();
+                    //mexPrintf("Costlier neighbor exists at %d, %d.  Setting this node to parent.\n", discreteNewX, discreteNewY);
                 }
                 continue;
             }
-            mNeighbors[mNumNeighbors] = new Node(newX, newY, newOrientation, primitiveNum, mWorldInfo, this);
-            // mexPrintf("newNode contains = %f, %f, %f", mNeighbors[mNumNeighbors]->getX(), mNeighbors[mNumNeighbors]->getY(), mNeighbors[mNumNeighbors]->getOrientation());
+            Node* newNode = new Node(newX, newY, newOrientation, primitiveNum, mWorldInfo, this);
+            mNeighbors[mNumNeighbors] = newNode;
+            //mexPrintf("New node = %f, %f, %f.\n", mNeighbors[mNumNeighbors]->getX(), mNeighbors[mNumNeighbors]->getY(), mNeighbors[mNumNeighbors]->getOrientation());
             mNumNeighbors++;
         }
     }
@@ -100,6 +128,14 @@ float Node::getG() {
 
 float Node::getH() {
     return mH;
+}
+
+int Node::getCloseID() {
+    return mCloseID;
+}
+
+void Node::resetCloseID() {
+    mCloseID = mWorldInfo->getCloseThreshold();
 }
 
 bool Node::isClosed() {

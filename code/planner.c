@@ -67,14 +67,19 @@ int getPrimitiveDirectionforRobotPose(float angle)
 static void doAStar() {
     aStarRunning = true;
     Node* startNode;
-    // mexPrintf("New A Star Loop!\n");
+    mexPrintf("New A Star Loop!\n");
+    mexEvalString("pause(.001);");
     if (worldInfo->nodeExists(worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation(), -1)) {
         startNode = worldInfo->getNode(worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation(), -1);
+        startNode->setParent(NULL);
+        startNode->getCost();
+        startNode->resetNeighborsDiscovered();
     } else {
         startNode = new Node(worldInfo->getStartX(), worldInfo->getStartY(), worldInfo->getStartOrientation(), -1, worldInfo, NULL);
     }
 
-    //mexPrintf("[A Star] Start X = %f, Start Y = %f\n", worldInfo->getStartX(), worldInfo->getStartY());
+    mexPrintf("[A Star] Start X = %f, Start Y = %f\n", worldInfo->getStartX(), worldInfo->getStartY());
+    mexEvalString("pause(.001);");
 
     priority_queue<Node*, std::vector<Node*>, CompareNode> priorityQueue;
     priorityQueue.push(startNode);
@@ -84,37 +89,50 @@ static void doAStar() {
     while (true) {
         if (priorityQueue.size() == 0) {
             mexPrintf("The goal is not reachable!!!\n");
+            mexEvalString("pause(.001);");
+            aStarRunning = false;
             return;
         }
         if (worldInfo->goalReached()) {
-            mexPrintf("The goal has been reached!  Anymore work is useless.\n");
+            mexPrintf("The goal has been reached!  Any more work is useless.\n");
+            mexEvalString("pause(.001);");
             return;                                                                                                                         
         }
         currNode = priorityQueue.top();
         priorityQueue.pop();
 
-        if (currNode->isClosed()) {
-            //mexPrintf("Curr Node is closed!");
+        //mexPrintf("currNode location = (%f, %f, %f)\n", currNode->getX(), currNode->getY(), currNode->getOrientation());
+        //mexEvalString("pause(.001);");
+        if (!currNode || currNode->isClosed()) {
+            //mexPrintf("Curr Node is closed!\n");
+            //mexEvalString("pause(.001);");
             continue;
         }
-        if (currNode->isCloseEnoughToGoal())
+        if (currNode->isCloseEnoughToGoal()) {
+            mexPrintf("Curr Node is close enough to goal.\n");
+            mexEvalString("pause(.001);");
             break;
+        }
 
         if (!currNode->getNeighborsDiscovered())
             currNode->discoverNeighbors();
         
-        // mexPrintf("currNode location = (%f, %f, %f)\n", currNode->getX(), currNode->getY(), currNode->getOrientation());
+        
         for (int i = 0; i < currNode->getNumNeighbors(); i++) {
             Node* neighbor = currNode->getNeighbor(i);
-            // mexPrintf("neighbor location = (%f, %f, %f)\n", neighbor->getX(), neighbor->getY(), neighbor->getOrientation());
+            //mexPrintf("neighbor %d/%d location = (%f, %f, %f)\n", (i+1), currNode->getNumNeighbors(), neighbor->getX(), neighbor->getY(), neighbor->getOrientation());
+            //mexEvalString("pause(.001);");
             priorityQueue.push(neighbor);
         }
-        // mexPrintf("Closing current node.\n");
+        //mexPrintf("Closing currNode location = (%f, %f, %f)\n", currNode->getX(), currNode->getY(), currNode->getOrientation());
+        //mexEvalString("pause(.001);");
+        //mexPrintf("Closing current node.\n");
         currNode->close();
     }
     goalNodeWithBestPath = currNode;
     aStarRunning = false;
-    mexPrintf("A Star Loop Completed!");
+    mexPrintf("A Star Loop Completed!\n");
+    mexEvalString("pause(.001);");
 }
 
 static void planner(
@@ -129,13 +147,16 @@ static void planner(
     PrimArray mprim,
     int *prim_id)
 {
-    // mexPrintf("Map size = (%d, %d)", x_size, y_size);
+    mexPrintf("Map size = (%d, %d)", x_size, y_size);
+    mexEvalString("pause(.001);");
     if (worldInfo == NULL) {
-        // mexPrintf("Creating worldinfo!\n");
+        mexPrintf("Creating worldinfo!\n");
+        mexEvalString("pause(.001);");
         worldInfo = new WorldInfo(robotposeX, robotposeY, robotposeTheta, goalposeX, goalposeY,
                 (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
     } else {
-        // mexPrintf("Updating worldInfo!\n");
+        mexPrintf("Updating worldInfo!\n");
+        mexEvalString("pause(.001);");
         worldInfo->update(robotposeX, robotposeY, robotposeTheta, goalposeX, goalposeY,
                 (x_size * RES), (y_size * RES), map, ((PrimArrayPtr) mprim));
     }
@@ -147,18 +168,22 @@ static void planner(
 
     worldInfo->computeDijkstraHeuristics();
 
-    if (!aStarRunning) {
+    if (!aStarRunning && goalNodeWithBestPath == NULL || worldInfo->getDistanceToGoal(robotposeX, robotposeY) < 3) {
         doAStar();
+    } else {
+        mexPrintf("A star is still running from prev iteration!\n");
     }
 
     // doAStar should have set goalNodeWithBestPath
     Node* currNode = goalNodeWithBestPath;
     
     int i = 0;
-    //mexPrintf("Goal = (%d, %d)\n", worldInfo->getDiscreteGoalX(), worldInfo->getDiscreteGoalY());
+    mexPrintf("Goal = (%d, %d)\n", worldInfo->getDiscreteGoalX(), worldInfo->getDiscreteGoalY());
+    mexEvalString("pause(.001);");
     // currNode is the goal at this point
     while(currNode->getParent()->getParent() != NULL) {
-        //mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
+        mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
+        mexEvalString("pause(.001);");
         currNode = currNode->getParent();
         i++;
     }
@@ -167,15 +192,17 @@ static void planner(
         goalNodeWithBestPath = NULL;
         return;
     }
-    /*mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());    
+    mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());    
     mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", (i+1), currNode->getParent()->getDiscreteX(), currNode->getParent()->getDiscreteY(), currNode->getParent()->getDiscreteOrientation(), currNode->getParent()->getIncomingPrimitive());
     mexPrintf("Start = (%d, %d, %d)\n", worldInfo->getDiscreteStartX(), worldInfo->getDiscreteStartY(), worldInfo->getDiscreteStartOrientation());
 
     mexPrintf("BackPath[%d] = (%d, %d, %d, %d)\n", i, currNode->getDiscreteX(), currNode->getDiscreteY(), currNode->getDiscreteOrientation(), currNode->getIncomingPrimitive());
     mexPrintf("Curr Node's Primitive = %d\n", currNode->getIncomingPrimitive());
     mexPrintf("Curr Node Is In Colllision = %d\n", worldInfo->isInCollision(currNode->getDiscreteX(), currNode->getDiscreteY()));
+    mexPrintf("Path to Curr Node Is In Colllision = %d\n", worldInfo->isPathInCollision(currNode->getParent(), currNode->getIncomingPrimitive()));
     mexPrintf("Here's what the docs say: %d\n", ((int) map[GETMAPINDEX(currNode->getDiscreteX(), currNode->getDiscreteY(), worldInfo->getDiscreteMapWidth(), worldInfo->getDiscreteMapHeight())]));
-    for (int x = -20; x <= 20; x++) {
+    mexEvalString("pause(.001);");
+    /*for (int x = -20; x <= 20; x++) {
         for (int y = -20; y <= 20; y++) {
             mexPrintf("Curr Node(%d,%d) Is In Colllision = %d\n", x, y, worldInfo->isInCollision(currNode->getDiscreteX()+x, currNode->getDiscreteY()+y));
         }
@@ -183,6 +210,7 @@ static void planner(
     *prim_id = currNode->getIncomingPrimitive();
 
     currNode->setParent(NULL); // currNode is now the start node
+    mexEvalString("pause(.001);");
 
     return;
 }
@@ -225,6 +253,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
      
 {
     mexPrintf("In mex function!\n");
+    mexEvalString("pause(.001);");
+
     /* Read motion primtives */
     PrimArray motion_primitives;
     parseMotionPrimitives(motion_primitives);
@@ -252,8 +282,12 @@ void mexFunction( int nlhs, mxArray *plhs[],
     } else {
         mexPrintf("Current map is new or the same as the previous -- reusing map!\n");
     }
+    mexPrintf("Got here!\n");
+    mexEvalString("pause(.001);");
 
     mapMemoryLocation = ((long) map);
+    mexPrintf("Got here2!\n");
+    mexEvalString("pause(.001);");
 
     /* get the dimensions of the robotpose and the robotpose itself*/     
     int robotpose_M = mxGetM(ROBOT_IN);

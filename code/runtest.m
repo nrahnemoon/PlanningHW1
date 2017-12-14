@@ -55,7 +55,7 @@ for i = 1:2000
     [ret, motion] = applyaction(envmap, res, robotpos, mprim, dir, mprim_id);
     newrobotpos = motion(end,:);
     if (ret ~= 1)
-        fprintf(1, 'planned action leads to collision\n');
+        fprintf(1, 'planned action leads to collision at %f, %f, %f\n', newrobotpos(1), newrobotpos(2), newrobotpos(3));
         return
     end
     

@@ -7,7 +7,6 @@ mprim_id = 1;   %arbitrary move
 
 if (MEX == 1)
 	%if using MEX, here you would call the planner
-    robotpos = robotpos
 	mprim_id = planner(envmap, robotpos, targetpos);
     mprim_id = mprim_id + 1;
 

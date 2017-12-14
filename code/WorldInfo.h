@@ -61,6 +61,7 @@ class WorldInfo {
         int discretize(float pos);
         int discretizeAngle(float angle);
         bool isInCollision(int discreteX, int discreteY);
+        bool isPathInCollision(Node* node, int primitive);
         bool nodeExists(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive);
         Node* getNode(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive);
         int getMapIndex(int discreteX, int discreteY);

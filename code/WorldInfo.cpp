@@ -97,7 +97,23 @@ int WorldInfo::discretizeAngle(float angle) {
 bool WorldInfo::isInCollision(int discreteX, int discreteY) {
     int mapIndex = GETMAPINDEX(discreteX, discreteY, mDiscreteMapWidth, mDiscreteMapHeight);
     //mexPrintf("Checking if (%d, %d) with mapIndex %d is in collision\n", discreteX, discreteY, mapIndex);
-    return (((int) mObstacleMap[mapIndex]) != 0.0);
+    return (((int) mObstacleMap[mapIndex]) != 0);
+}
+
+bool WorldInfo::isPathInCollision(Node* node, int primitive) {
+    float newX, newY;
+    //mexPrintf("Checking is primitive %d at (%f, %f) will be in collision.\n", primitive, node->getX(), node->getY());
+    for (int i = 0; i < NUMOFINTERSTATES; i++) {
+        newX = node->getX() + mPrimitives[node->getDiscreteOrientation()][primitive][i][0];
+        newY = node->getY() + mPrimitives[node->getDiscreteOrientation()][primitive][i][1];
+        //mexPrintf("Checking (%f, %f).\n", newX, newY);
+
+        if(isInCollision(discretize(newX), discretize(newY))) {
+            //mexPrintf("(%d, %d) was in collision.\n", discretize(newX), discretize(newY));
+            return true;
+        }
+    }
+    return false;
 }
 
 bool WorldInfo::nodeExists(int discreteX, int discreteY, int discreteOrientation, int incomingPrimitive) {
@@ -186,6 +202,7 @@ void WorldInfo::computeDijkstraHeuristics() {
 
         currMapIndex = getMapIndex(currDijkstraNode->mDiscreteX, currDijkstraNode->mDiscreteY);
         //mexPrintf("\nCurr Dij Node = (%d, %d)\n", currDijkstraNode->mDiscreteX, currDijkstraNode->mDiscreteY);
+        //mexEvalString("pause(.001);");
 
         if (countdown) {
             countdownNum--;
@@ -199,12 +216,14 @@ void WorldInfo::computeDijkstraHeuristics() {
             neighborDiscreteX = currDijkstraNode->mDiscreteX + neighborX[i];
             neighborDiscreteY = currDijkstraNode->mDiscreteY + neighborY[i];
             //mexPrintf("Neighbor = (%d, %d)\n", neighborDiscreteX, neighborDiscreteY);
+            //mexEvalString("pause(.001);");
             if (!outOfBounds(neighborDiscreteX, neighborDiscreteY)) {
                 neighborMapIndex = getMapIndex(neighborDiscreteX, neighborDiscreteY);
                 if (!mObstacleMap[neighborMapIndex]) {
-                    if (mHeuristics[neighborMapIndex] != mHeuristics[currMapIndex] + 1) {
+                    if (mHeuristics.find(neighborMapIndex) == mHeuristics.end()) {
                         mHeuristics[neighborMapIndex] = mHeuristics[currMapIndex] + 1;
-                        // mexPrintf("Dijkstra Heuristic for (%d, %d) = %d\n", neighborDiscreteX, neighborDiscreteY, mHeuristics[neighborMapIndex]);
+                        //mexPrintf("Dijkstra Heuristic for (%d, %d) = %d\n", neighborDiscreteX, neighborDiscreteY, mHeuristics[neighborMapIndex]);
+                        //mexEvalString("pause(.001);");
                         dijkstraQueue.push(new DijkstraNode(neighborDiscreteX, neighborDiscreteY, getDumbEuclideanToStart(neighborDiscreteX, neighborDiscreteY)));
                     }
                 }
@@ -269,13 +288,15 @@ int WorldInfo::getCloseThreshold() {
 }
 
 void WorldInfo::resetCloseThreshold() {
-    mCloseThreshold++;
+    mCloseThreshold += 2;
 }
 
 bool WorldInfo::isCloseEnoughToGoal(float x, float y) {
     // Bug in Matlab code says the target has been reached when the robot is 0.5 away from the goal
     // Let this be 0.4 for safety...
-    return (euclideanDistance(fabs(x- mEndX), fabs(y - mEndY)) <= 0.4);
+    double distanceToGoal = euclideanDistance(fabs(x- mEndX), fabs(y - mEndY));
+    //mexPrintf("[isCloseEnoughToGoal] Distance to goal = %f\n", distanceToGoal);
+    return (distanceToGoal <= 0.4);
 }
 
 bool WorldInfo::goalReached() {
